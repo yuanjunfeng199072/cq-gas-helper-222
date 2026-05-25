@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="重庆加油站省钱助手">
+  <title>重庆加油站省钱助手</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo"><span class="logo-icon">&#9981;</span><span>重庆加油省钱</span></div>
+        <span class="badge-demo" id="location-badge">定位中</span>
+      </div>
+      <div class="location-card">
+        <p class="location-label">&#128205; 当前位置</p>
+        <h1 class="location-name" id="location-name">加载中...</h1>
+        <p class="location-district" id="location-district"></p>
+      </div>
+    </header>
+    <section class="benchmark-bar">
+      <div class="benchmark-item"><p class="benchmark-fuel">92# 区域均价</p><p class="benchmark-price">&yen;<span id="benchmark-92">--</span><span>/L</span></p></div>
+      <div class="benchmark-item"><p class="benchmark-fuel">95# 区域均价</p><p class="benchmark-price">&yen;<span id="benchmark-95">--</span><span>/L</span></p></div>
+      <p class="benchmark-meta" id="benchmark-meta"></p>
+    </section>
+    <section class="route-section">
+      <h2 class="route-title">🚗 顺路加油</h2>
+      <p class="route-desc">输入目的地，找出途中最省钱的加油站（偏离路线 ≤ 1.5km）</p>
+      <div class="route-form">
+        <input type="text" id="destination-input" class="route-input" placeholder="如：江北观音桥、沙坪坝、南坪" maxlength="50">
+        <button type="button" id="route-search-btn" class="route-search-btn">查找顺路最省钱</button>
+      </div>
+      <div id="route-result" class="route-result hidden"></div>
+    </section>
+    <section class="map-section">
+      <div class="map-header">
+        <h2 class="map-title">附近地图</h2>
+        <button type="button" id="locate-btn" class="locate-btn">重新定位</button>
+      </div>
+      <div id="map-container" class="map-container"><div id="map-placeholder" class="map-placeholder">地图加载中...</div></div>
+    </section>
+    <main class="main">
+      <div class="section-header"><h2 class="section-title">附近加油站</h2><span class="section-count" id="station-count"></span></div>
+      <div class="sort-tabs">
+        <button class="sort-tab active" data-sort="saving">按省钱排序</button>
+        <button class="sort-tab" data-sort="distance">按距离排序</button>
+        <button class="sort-tab hidden" data-sort="route" id="route-sort-tab">顺路推荐</button>
+      </div>
+      <div id="loading" class="loading"><div class="loading-spinner"></div><p>正在加载...</p></div>
+      <div id="station-list" class="station-list" style="display:none;"></div>
+    </main>
+    <footer class="footer">数据仅供参考 · 油价为模拟数据</footer>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/route.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
