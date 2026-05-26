@@ -9,6 +9,9 @@ const AMAP_CONFIG = {
   key: 'f6c15fef26ccfc172c4a2bc5b75cfc96',
   securityJsCode: '624f58a06409da8057e808f92529bd61',
   version: '2.0',
-  plugins: ['AMap.Geolocation', 'AMap.Geocoder', 'AMap.Scale', 'AMap.ToolBar', 'AMap.Driving'],
-  routeDetourKm: 1.5,
+  plugins: ['AMap.Geolocation', 'AMap.Geocoder', 'AMap.PlaceSearch', 'AMap.AutoComplete', 'AMap.Scale', 'AMap.ToolBar', 'AMap.Driving'],
+  routeDetourKm: 3,
+  routeRecommendMax: 3,
+  markerZoomThreshold: 11,
+  fitViewRadiusKm: 12,
 };

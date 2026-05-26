@@ -71,6 +71,56 @@ function formatPrice(price) {
 }
 
 /**
+ * 格式化每升节约金额
+ */
+function formatSavingPerLiter(diff) {
+  if (diff > 0) return `¥${diff.toFixed(2)}/L`;
+  if (diff < 0) return `-¥${Math.abs(diff).toFixed(2)}/L`;
+  return '持平';
+}
+
+/**
+ * 筛选指定半径内加油站
+ */
+function filterNearbyStations(stations, maxKm) {
+  return stations.filter((s) => s.distance <= maxKm);
+}
+
+/**
+ * 地图用简短优惠标签，如 ↓0.13
+ */
+function formatMapSavingLabel(diff) {
+  if (diff > 0) return `\u2193${diff.toFixed(2)}`;
+  return '--';
+}
+
+/**
+ * 今日最推荐：附近综合每升优惠最大
+ */
+function getTodayBestStation(stations) {
+  if (!stations.length) return null;
+  const candidates = stations.filter((s) => s.diff92 > 0 || s.diff95 > 0);
+  const pool = candidates.length ? candidates : stations;
+  return pool.reduce((best, s) => {
+    const score = Math.max(s.diff92, s.diff95);
+    const bestScore = Math.max(best.diff92, best.diff95);
+    if (score > bestScore) return s;
+    if (score === bestScore && s.distance < best.distance) return s;
+    return best;
+  });
+}
+
+/**
+ * 按油品每升节约排名（全部附近站点）
+ */
+function rankStationsByFuel(stations, fuel) {
+  const key = fuel === '95' ? 'diff95' : 'diff92';
+  return [...stations]
+    .filter((s) => s[key] > 0)
+    .sort((a, b) => b[key] - a[key] || a.distance - b.distance);
+}
+
+/**
  * 为加油站计算节省信息
  * @param {object} station
  * @param {object} benchmark
@@ -106,8 +156,8 @@ function sortStations(stations, sortBy) {
     sorted.sort((a, b) => a.distance - b.distance);
   } else if (sortBy === 'route') {
     sorted.sort((a, b) => {
-      const aOnRoute = a.routeDetourKm != null && a.routeDetourKm <= (AMAP_CONFIG.routeDetourKm || 1.5);
-      const bOnRoute = b.routeDetourKm != null && b.routeDetourKm <= (AMAP_CONFIG.routeDetourKm || 1.5);
+      const aOnRoute = a.routeDetourKm != null && a.routeDetourKm <= (AMAP_CONFIG.routeDetourKm || 3);
+      const bOnRoute = b.routeDetourKm != null && b.routeDetourKm <= (AMAP_CONFIG.routeDetourKm || 3);
       if (aOnRoute !== bOnRoute) return aOnRoute ? -1 : 1;
       if (aOnRoute && bOnRoute) {
         return b.maxSaving - a.maxSaving || a.routeDetourKm - b.routeDetourKm;
@@ -172,16 +222,63 @@ function minDistanceToRouteKm(station, routePoints) {
 }
 
 /**
- * 筛选顺路加油站并按省钱+绕路排序
+ * 筛选顺路加油站并按省钱+绕路排序，最多返回 maxCount 个
  */
-function findOnRouteStations(stations, routePoints, maxDetourKm) {
+function findOnRouteStations(stations, routePoints, maxDetourKm, maxCount = Infinity) {
   return stations
     .map((station) => ({
       ...station,
       routeDetourKm: Math.round(minDistanceToRouteKm(station, routePoints) * 10) / 10,
     }))
     .filter((s) => s.routeDetourKm <= maxDetourKm)
-    .sort((a, b) => b.maxSaving - a.maxSaving || a.routeDetourKm - b.routeDetourKm);
+    .sort((a, b) => b.maxSaving - a.maxSaving || a.routeDetourKm - b.routeDetourKm)
+    .slice(0, maxCount);
+}
+
+/**
+ * 计算站点到路线的最近投影点（用于绘制绕路连线）
+ */
+function findNearestRouteSnapPoint(station, routePoints) {
+  if (!routePoints || routePoints.length < 2) return null;
+
+  let min = Infinity;
+  let snap = null;
+
+  for (let i = 0; i < routePoints.length - 1; i += 1) {
+    const a = routePoints[i];
+    const b = routePoints[i + 1];
+    const refLat = (a.lat + b.lat + station.lat) / 3;
+    const toXY = (lat, lng) => ({
+      x: (lng - a.lng) * Math.cos((refLat * Math.PI) / 180) * 111.32,
+      y: (lat - a.lat) * 110.574,
+    });
+
+    const p = toXY(station.lat, station.lng);
+    const bx = toXY(b.lat, b.lng).x;
+    const by = toXY(b.lat, b.lng).y;
+    const abLenSq = bx * bx + by * by;
+
+    let projLat = a.lat;
+    let projLng = a.lng;
+    if (abLenSq > 0) {
+      let t = (p.x * bx + p.y * by) / abLenSq;
+      t = Math.max(0, Math.min(1, t));
+      projLat = a.lat + t * (b.lat - a.lat);
+      projLng = a.lng + t * (b.lng - a.lng);
+    }
+
+    const d = calcDistanceKm(station.lat, station.lng, projLat, projLng);
+    if (d < min) {
+      min = d;
+      snap = {
+        lat: projLat,
+        lng: projLng,
+        distanceKm: Math.round(d * 10) / 10,
+      };
+    }
+  }
+
+  return snap;
 }
 
 /**
