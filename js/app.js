@@ -30,8 +30,9 @@ const DOM = {
 };
 
 async function loadData() {
+  const cacheBust = window.APP_BUILD || Date.now();
   try {
-    const res = await fetch('./data/mock-stations.json');
+    const res = await fetch(`./data/mock-stations.json?v=${cacheBust}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('fetch failed');
     appData = await res.json();
   } catch {
