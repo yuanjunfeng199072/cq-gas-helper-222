@@ -212,6 +212,7 @@ const GasMap = {
     const updatedHtml = updated !== '--'
       ? `<span class="map-marker-updated">更${updated}</span>`
       : '';
+    const activityHtml = buildMapActivityHtml(station, { compact: zoom < 13 });
     const compact = zoom < 13;
 
     if (compact) {
@@ -221,6 +222,7 @@ const GasMap = {
           <span class="map-marker-compact-label ${cls92}">92${label92}</span>
           <span class="map-marker-compact-label ${cls95}">95${label95}</span>
           ${updatedHtml}
+          ${activityHtml}
           <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
         </div>
       `;
@@ -233,10 +235,18 @@ const GasMap = {
           <span class="map-marker-fuel ${cls92}">92${label92}</span>
           <span class="map-marker-fuel ${cls95}">95${label95}</span>
           ${updatedHtml}
+          ${activityHtml}
         </div>
         <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
       </div>
     `;
+  },
+
+  markerDetailOffset(zoom, station) {
+    if (zoom < this.markerZoomThreshold) return -14;
+    const hasActivity = !!getStationActivityRule(station);
+    if (zoom < 13) return hasActivity ? -40 : -32;
+    return hasActivity ? -52 : -40;
   },
 
   bindZoomListener() {
@@ -254,7 +264,7 @@ const GasMap = {
       const isOnRoute = this.lastMarkerOptions.onRouteIds?.includes(station.id);
       const routeRank = this.lastMarkerOptions.recommendRanks?.[station.id] || 0;
       marker.setContent(this.buildMarkerContent(station, zoom, { isRouteBest, isOnRoute, routeRank }));
-      marker.setOffset(new AMap.Pixel(0, zoom >= this.markerZoomThreshold ? (zoom < 13 ? -32 : -40) : -14));
+      marker.setOffset(new AMap.Pixel(0, this.markerDetailOffset(zoom, station)));
     });
   },
 
@@ -286,7 +296,7 @@ const GasMap = {
         title: routeRank ? `推荐${routeRank}：${station.name}` : station.name,
         extData: { id: station.id },
         content: this.buildMarkerContent(station, zoom, { isRouteBest, isOnRoute, routeRank }),
-        offset: new AMap.Pixel(0, showDetail ? (zoom < 13 ? -32 : -40) : -14),
+        offset: new AMap.Pixel(0, this.markerDetailOffset(zoom, station)),
         zIndex: isRouteBest ? 150 : isOnRoute ? 130 : 100,
       });
 

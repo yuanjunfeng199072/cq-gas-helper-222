@@ -95,6 +95,42 @@ function formatMapSavingLabel(diff) {
 }
 
 /**
+ * 油站活动细则（放大标签用）
+ */
+function getStationActivityRule(station) {
+  if (station.activityRule) return String(station.activityRule).trim();
+  const bestDiff = Math.max(station.diff92 || 0, station.diff95 || 0);
+  if (bestDiff <= 0) return '';
+  const idNum = parseInt(String(station.id).replace(/\D/g, ''), 10) || 0;
+  const rules = [
+    '周一周三周五',
+    '周二周四会员日',
+    '夜间22:00-6:00',
+    '满200减20',
+    '持卡加油优惠',
+  ];
+  return rules[idNum % rules.length];
+}
+
+function escapeMapText(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * 地图放大标签 · 活动细则小字 HTML
+ */
+function buildMapActivityHtml(station, { compact = false } = {}) {
+  const rule = getStationActivityRule(station);
+  if (!rule) return '';
+  const cls = compact ? 'map-marker-activity map-marker-activity-compact' : 'map-marker-activity';
+  return `<span class="${cls}">活动细则：${escapeMapText(rule)}</span>`;
+}
+
+/**
  * 油价数据更新日期（简短）
  */
 function formatPriceUpdated(dateStr) {
