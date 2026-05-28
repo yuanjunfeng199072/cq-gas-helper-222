@@ -213,6 +213,7 @@ function renderAll() {
 }
 
 function openRankSheet() {
+  if (GasCommunity.sheetOpen) GasCommunity.closeSheet();
   sheetOpen = true;
   DOM.rankSheet?.classList.add('open');
   DOM.rankSheet?.setAttribute('aria-hidden', 'false');
@@ -374,10 +375,11 @@ function bindDestAutocomplete() {
 }
 
 function bindFeedback() {
-  DOM.feedbackBtn?.addEventListener('click', () => {
-    const msg = prompt('请输入您的意见或建议（模拟反馈）：');
-    if (msg?.trim()) alert('感谢您的反馈，我们已记录！');
-  });
+  /* 意见反馈已并入情报共建模块 */
+}
+
+function bindCommunity() {
+  GasCommunity.init(() => enrichedStations);
 }
 
 async function searchOnRouteBest() {
@@ -430,7 +432,7 @@ function bindEvents() {
   DOM.routeSearchBtn?.addEventListener('click', searchOnRouteBest);
   bindDestAutocomplete();
   bindRankSheet();
-  bindFeedback();
+  bindCommunity();
 }
 
 async function init() {
