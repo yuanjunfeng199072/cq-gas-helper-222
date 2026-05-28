@@ -155,6 +155,7 @@ const GasMap = {
       this.setStationMarkers(stations);
       this.bindZoomListener();
       this.fitView();
+      this.scheduleMapResize();
       this.ready = true;
       return true;
     } catch (err) {
@@ -238,6 +239,14 @@ const GasMap = {
   bindZoomListener() {
     if (!this.map) return;
     this.map.on('zoomend', () => this.refreshMarkerLabels());
+    window.addEventListener('resize', () => this.scheduleMapResize());
+  },
+
+  scheduleMapResize() {
+    if (!this.map) return;
+    const run = () => this.map?.resize();
+    setTimeout(run, 0);
+    setTimeout(run, 200);
   },
 
   refreshMarkerLabels() {
@@ -417,18 +426,8 @@ const GasMap = {
     ];
     if (overlays.length) {
       this.map.setFitView(overlays, false, [50, 50, 72, 50], 14);
-      this.ensureDetailZoom();
+      this.scheduleMapResize();
     }
-  },
-
-  /** fitView 后保证至少显示展开标签 */
-  ensureDetailZoom() {
-    if (!this.map) return;
-    const minZoom = Math.max(this.markerZoomThreshold, 12);
-    if (this.map.getZoom() < minZoom) {
-      this.map.setZoom(minZoom);
-    }
-    this.refreshMarkerLabels();
   },
 
   fitDistrict(district) {
@@ -441,7 +440,7 @@ const GasMap = {
     const overlays = [...markers];
     if (this.userMarker) overlays.unshift(this.userMarker);
     this.map.setFitView(overlays, false, [50, 50, 72, 50], 14);
-    this.ensureDetailZoom();
+    this.scheduleMapResize();
   },
 
   fitRouteView() {

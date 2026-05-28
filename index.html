@@ -9,31 +9,27 @@
   <meta name="description" content="重庆加油优惠情报站 - 快速找到附近最优惠加油站">
   <meta name="theme-color" content="#1d4ed8">
   <title>重庆加油优惠情报站</title>
-  <script>window.APP_BUILD = '2025052611';</script>
+  <script>window.APP_BUILD = '2025052612';</script>
+  <style id="critical-layout">
+    .app { max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .map-wrap { flex: 1; min-height: 0; position: relative; }
+    .intel-sheet, .rank-sheet {
+      position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 480px;
+      transform: translateX(-50%) translateY(100%); z-index: 50;
+      pointer-events: none; visibility: hidden;
+    }
+    .intel-sheet.open, .rank-sheet.open {
+      transform: translateX(-50%) translateY(0); pointer-events: auto; visibility: visible;
+    }
+    .sheet-backdrop { position: fixed; inset: 0; z-index: 40; }
+    .sheet-backdrop.hidden { display: none; }
+  </style>
   <script>
   (function () {
     var BUILD = window.APP_BUILD;
     var isLocal = location.protocol === 'file:'
       || location.hostname === 'localhost'
       || location.hostname === '127.0.0.1';
-    var GITHUB_REPO = 'https://cdn.jsdelivr.net/gh/yuanjunfeng199072/cq-gas-helper-222@main/';
-    var tz = '';
-    try {
-      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    } catch (e) { /* ignore */ }
-
-    // 仅在线上 GitHub Pages 且大陆网络时走 jsDelivr；本地直接打开 html 始终用本地文件
-    var isMainland = !isLocal && (
-      ['Asia/Shanghai', 'Asia/Chongqing', 'Asia/Urumqi', 'Asia/Harbin'].indexOf(tz) >= 0
-      || /^zh(-cn)?$/i.test(navigator.language || '')
-    );
-
-    if (isMainland && !document.querySelector('base[data-cdn]')) {
-      var base = document.createElement('base');
-      base.href = GITHUB_REPO;
-      base.setAttribute('data-cdn', 'jsdelivr');
-      document.head.insertBefore(base, document.head.firstChild);
-    }
 
     if (isLocal) return;
 
@@ -53,7 +49,7 @@
     } catch (err) { /* ignore */ }
   })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=2025052611">
+  <link rel="stylesheet" href="css/style.css?v=2025052612">
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="https://webapi.amap.com">
 </head>
@@ -102,9 +98,10 @@
         <span>情报共建</span>
       </button>
     </nav>
+  </div>
 
-    <!-- 情报共建抽屉 -->
-    <div id="intel-sheet" class="intel-sheet" aria-hidden="true">
+  <!-- 抽屉与遮罩放在 .app 外，避免挤压地图布局 -->
+  <div id="intel-sheet" class="intel-sheet" aria-hidden="true">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
         <h2 class="sheet-title">情报共建计划</h2>
@@ -192,18 +189,17 @@
     </div>
     <div id="sheet-backdrop" class="sheet-backdrop hidden"></div>
 
-    <div id="loading" class="loading-overlay">
-      <div class="loading-spinner"></div>
-      <p>正在加载优惠情报...</p>
-    </div>
+  <div id="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>正在加载优惠情报...</p>
   </div>
 
-  <script src="data/stations-data.js?v=2025052611"></script>
-  <script src="js/config.js?v=2025052611"></script>
-  <script src="js/utils.js?v=2025052611"></script>
-  <script src="js/map.js?v=2025052611"></script>
-  <script src="js/route.js?v=2025052611"></script>
-  <script src="js/community.js?v=2025052611"></script>
-  <script src="js/app.js?v=2025052611"></script>
+  <script src="data/stations-data.js?v=2025052612"></script>
+  <script src="js/config.js?v=2025052612"></script>
+  <script src="js/utils.js?v=2025052612"></script>
+  <script src="js/map.js?v=2025052612"></script>
+  <script src="js/route.js?v=2025052612"></script>
+  <script src="js/community.js?v=2025052612"></script>
+  <script src="js/app.js?v=2025052612"></script>
 </body>
 </html>
