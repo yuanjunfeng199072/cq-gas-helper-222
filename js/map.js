@@ -212,25 +212,13 @@ const GasMap = {
     const updatedHtml = updated !== '--'
       ? `<span class="map-marker-updated">更${updated}</span>`
       : '';
-    const compact = zoom < 13;
-    const activityHtml = compact ? '' : buildMapActivityHtml(station);
-
-    if (compact) {
-      return `
-        <div class="map-marker map-marker-detail map-marker-compact ${isRouteBest ? 'is-best' : ''} ${routeRank ? 'has-rank' : ''}">
-          ${routeRank ? `<span class="map-marker-rank">${routeRank}</span>` : ''}
-          <span class="map-marker-compact-label ${cls92}">92${label92}</span>
-          <span class="map-marker-compact-label ${cls95}">95${label95}</span>
-          ${updatedHtml}
-          <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
-        </div>
-      `;
-    }
+    const activityHtml = buildMapActivityHtml(station);
+    const labelSizeClass = zoom < 13 ? 'map-marker-label-sm' : '';
 
     return `
       <div class="map-marker map-marker-detail ${isRouteBest ? 'is-best' : ''} ${routeRank ? 'has-rank' : ''}">
         ${routeRank ? `<span class="map-marker-rank map-marker-rank-lg">${routeRank}</span>` : ''}
-        <div class="map-marker-label">
+        <div class="map-marker-label ${labelSizeClass}">
           <span class="map-marker-fuel ${cls92}">92${label92}</span>
           <span class="map-marker-fuel ${cls95}">95${label95}</span>
           ${updatedHtml}
@@ -243,7 +231,6 @@ const GasMap = {
 
   markerDetailOffset(zoom, station) {
     if (zoom < this.markerZoomThreshold) return -14;
-    if (zoom < 13) return -32;
     const hasActivity = !!getStationActivityTime(station);
     return hasActivity ? -52 : -40;
   },
@@ -429,8 +416,19 @@ const GasMap = {
       ...markers,
     ];
     if (overlays.length) {
-      this.map.setFitView(overlays, false, [50, 50, 72, 50], 13);
+      this.map.setFitView(overlays, false, [50, 50, 72, 50], 14);
+      this.ensureDetailZoom();
     }
+  },
+
+  /** fitView 后保证至少显示展开标签 */
+  ensureDetailZoom() {
+    if (!this.map) return;
+    const minZoom = Math.max(this.markerZoomThreshold, 12);
+    if (this.map.getZoom() < minZoom) {
+      this.map.setZoom(minZoom);
+    }
+    this.refreshMarkerLabels();
   },
 
   fitDistrict(district) {
@@ -443,6 +441,7 @@ const GasMap = {
     const overlays = [...markers];
     if (this.userMarker) overlays.unshift(this.userMarker);
     this.map.setFitView(overlays, false, [50, 50, 72, 50], 14);
+    this.ensureDetailZoom();
   },
 
   fitRouteView() {

@@ -440,6 +440,8 @@ async function init() {
   enrichAllStations();
   setLocatingState(true);
   bindEvents();
+  const badge = document.getElementById('build-badge');
+  if (badge) badge.textContent = `v${window.APP_BUILD || 'dev'}`;
   const ok = await GasMap.init(appData.userLocation, enrichedStations);
   if (!ok && DOM.locateBtn) DOM.locateBtn.disabled = true;
   const located = await requestRealLocation({ alertOnFail: false });
