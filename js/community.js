@@ -23,8 +23,8 @@ const GasCommunity = {
       form: document.getElementById('intel-form'),
       stationInput: document.getElementById('intel-station'),
       stationList: document.getElementById('intel-station-list'),
-      price92: document.getElementById('intel-price92'),
-      price95: document.getElementById('intel-price95'),
+      save92: document.getElementById('intel-save92'),
+      save95: document.getElementById('intel-save95'),
       note: document.getElementById('intel-note'),
       updatedAt: document.getElementById('intel-updated'),
       nickname: document.getElementById('intel-nickname'),
@@ -60,6 +60,31 @@ const GasCommunity = {
 
   genNickname() {
     return `情报员${Math.floor(1000 + Math.random() * 9000)}`;
+  },
+
+  /** 统一为 -0.28 形式（每升优惠） */
+  normalizeSaving(value) {
+    if (value == null || value === '') return '';
+    const str = String(value).trim();
+    const num = parseFloat(str.replace(/[^\d.-]/g, ''));
+    if (Number.isNaN(num) || num === 0) return str.startsWith('-') ? str : '';
+    const abs = Math.abs(num);
+    return `-${abs.toFixed(2)}`;
+  },
+
+  formatSavingLine(fuel, value) {
+    const normalized = this.normalizeSaving(value);
+    if (!normalized) return '';
+    return `${fuel}${normalized}`;
+  },
+
+  getTipSavings(tip) {
+    const s92 = tip.save92 ?? tip.price92;
+    const s95 = tip.save95 ?? tip.price95;
+    return [
+      this.formatSavingLine('92', s92),
+      this.formatSavingLine('95', s95),
+    ].filter(Boolean).join(' · ');
   },
 
   fillStationDatalist() {
@@ -109,10 +134,7 @@ const GasCommunity = {
       const status = tip.status === 'adopted'
         ? '<span class="intel-tag adopted">已采纳</span>'
         : '<span class="intel-tag pending">待确认</span>';
-      const prices = [
-        tip.price92 ? `92# ${tip.price92}` : '',
-        tip.price95 ? `95# ${tip.price95}` : '',
-      ].filter(Boolean).join(' · ') || '价格待补';
+      const savings = this.getTipSavings(tip) || '优惠待补';
       const photo = tip.photo
         ? `<img class="intel-feed-photo" src="${tip.photo}" alt="情报图片">`
         : '';
@@ -122,7 +144,7 @@ const GasCommunity = {
             <strong>${this.escape(tip.stationName)}</strong>
             ${status}
           </div>
-          <p class="intel-feed-prices">${this.escape(prices)}</p>
+          <p class="intel-feed-prices">${this.escape(savings)}</p>
           ${tip.note ? `<p class="intel-feed-note">${this.escape(tip.note)}</p>` : ''}
           ${photo}
           <div class="intel-feed-meta">
@@ -200,14 +222,14 @@ const GasCommunity = {
     });
 
     this.dom.tipBtn?.addEventListener('click', () => {
-      alert('感谢你的支持！\n\n本站由车友共同维护。若本站帮你省到了钱，欢迎自愿 0.1 元支持（演示版暂未接入支付，后续将开放微信赞赏码）。');
+      alert('感谢你的支持！\n\n本站由车友共同维护。若本站帮你省到了钱，可自愿打赏0.1元（演示版暂未接入支付，后续将开放微信赞赏码）。');
     });
   },
 
   handleSubmit() {
     const stationName = this.dom.stationInput?.value.trim();
-    const price92 = this.dom.price92?.value.trim();
-    const price95 = this.dom.price95?.value.trim();
+    const save92 = this.normalizeSaving(this.dom.save92?.value.trim());
+    const save95 = this.normalizeSaving(this.dom.save95?.value.trim());
     const note = this.dom.note?.value.trim();
     const updatedAt = this.dom.updatedAt?.value;
     let nickname = this.dom.nickname?.value.trim();
@@ -216,8 +238,8 @@ const GasCommunity = {
       alert('请填写加油站名称');
       return;
     }
-    if (!price92 && !price95 && !note) {
-      alert('请至少填写 92/95 价格或优惠说明');
+    if (!save92 && !save95 && !note) {
+      alert('请至少填写 92/95 每升优惠或活动说明');
       return;
     }
 
@@ -231,8 +253,8 @@ const GasCommunity = {
     const tip = {
       id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       stationName,
-      price92,
-      price95,
+      save92,
+      save95,
       note,
       updatedAt: updatedAt || new Date().toISOString().slice(0, 10),
       nickname,
