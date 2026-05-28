@@ -79,11 +79,9 @@ const GasCommunity = {
   },
 
   getTipSavings(tip) {
-    const s92 = tip.save92 ?? tip.price92;
-    const s95 = tip.save95 ?? tip.price95;
     return [
-      this.formatSavingLine('92', s92),
-      this.formatSavingLine('95', s95),
+      this.formatSavingLine('92', tip.save92),
+      this.formatSavingLine('95', tip.save95),
     ].filter(Boolean).join(' · ');
   },
 
