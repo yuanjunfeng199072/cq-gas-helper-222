@@ -612,25 +612,20 @@ body {
 
 .map-marker-activity {
   display: block;
-  max-width: 88px;
+  max-width: 96px;
   font-size: 8px;
   font-weight: 500;
   line-height: 1.15;
   color: #64748b;
   text-align: center;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.92);
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
-}
-
-.map-marker-activity-compact {
-  max-width: 72px;
-  font-size: 7px;
-  padding: 0 3px;
 }
 
 .map-marker-detail.is-best .map-marker-label .map-marker-fuel.save-pos {

@@ -212,8 +212,8 @@ const GasMap = {
     const updatedHtml = updated !== '--'
       ? `<span class="map-marker-updated">更${updated}</span>`
       : '';
-    const activityHtml = buildMapActivityHtml(station, { compact: zoom < 13 });
     const compact = zoom < 13;
+    const activityHtml = compact ? '' : buildMapActivityHtml(station);
 
     if (compact) {
       return `
@@ -222,7 +222,6 @@ const GasMap = {
           <span class="map-marker-compact-label ${cls92}">92${label92}</span>
           <span class="map-marker-compact-label ${cls95}">95${label95}</span>
           ${updatedHtml}
-          ${activityHtml}
           <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
         </div>
       `;
@@ -244,8 +243,8 @@ const GasMap = {
 
   markerDetailOffset(zoom, station) {
     if (zoom < this.markerZoomThreshold) return -14;
+    if (zoom < 13) return -32;
     const hasActivity = !!getStationActivityTime(station);
-    if (zoom < 13) return hasActivity ? -40 : -32;
     return hasActivity ? -52 : -40;
   },
 

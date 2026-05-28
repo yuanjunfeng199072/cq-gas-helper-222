@@ -124,11 +124,10 @@ function escapeMapText(text) {
 /**
  * 地图放大标签 · 活动时间小字 HTML
  */
-function buildMapActivityHtml(station, { compact = false } = {}) {
+function buildMapActivityHtml(station) {
   const time = getStationActivityTime(station);
   if (!time) return '';
-  const cls = compact ? 'map-marker-activity map-marker-activity-compact' : 'map-marker-activity';
-  return `<span class="${cls}">活动时间：${escapeMapText(time)}</span>`;
+  return `<span class="map-marker-activity">活动时间：${escapeMapText(time)}</span>`;
 }
 
 /**
