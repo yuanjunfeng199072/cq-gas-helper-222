@@ -208,6 +208,10 @@ const GasMap = {
     const label95 = formatMapSavingLabel(station.diff95);
     const cls92 = station.diff92 > 0 ? 'save-pos' : 'save-none';
     const cls95 = station.diff95 > 0 ? 'save-pos' : 'save-none';
+    const updated = formatPriceUpdated(station.priceUpdatedAt);
+    const updatedHtml = updated !== '--'
+      ? `<span class="map-marker-updated">更${updated}</span>`
+      : '';
     const compact = zoom < 13;
 
     if (compact) {
@@ -216,6 +220,7 @@ const GasMap = {
           ${routeRank ? `<span class="map-marker-rank">${routeRank}</span>` : ''}
           <span class="map-marker-compact-label ${cls92}">92${label92}</span>
           <span class="map-marker-compact-label ${cls95}">95${label95}</span>
+          ${updatedHtml}
           <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
         </div>
       `;
@@ -227,6 +232,7 @@ const GasMap = {
         <div class="map-marker-label">
           <span class="map-marker-fuel ${cls92}">92${label92}</span>
           <span class="map-marker-fuel ${cls95}">95${label95}</span>
+          ${updatedHtml}
         </div>
         <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
       </div>
@@ -248,7 +254,7 @@ const GasMap = {
       const isOnRoute = this.lastMarkerOptions.onRouteIds?.includes(station.id);
       const routeRank = this.lastMarkerOptions.recommendRanks?.[station.id] || 0;
       marker.setContent(this.buildMarkerContent(station, zoom, { isRouteBest, isOnRoute, routeRank }));
-      marker.setOffset(new AMap.Pixel(0, zoom >= this.markerZoomThreshold ? (zoom < 13 ? -28 : -36) : -14));
+      marker.setOffset(new AMap.Pixel(0, zoom >= this.markerZoomThreshold ? (zoom < 13 ? -32 : -40) : -14));
     });
   },
 
@@ -280,7 +286,7 @@ const GasMap = {
         title: routeRank ? `推荐${routeRank}：${station.name}` : station.name,
         extData: { id: station.id },
         content: this.buildMarkerContent(station, zoom, { isRouteBest, isOnRoute, routeRank }),
-        offset: new AMap.Pixel(0, showDetail ? (zoom < 13 ? -28 : -36) : -14),
+        offset: new AMap.Pixel(0, showDetail ? (zoom < 13 ? -32 : -40) : -14),
         zIndex: isRouteBest ? 150 : isOnRoute ? 130 : 100,
       });
 
@@ -324,11 +330,15 @@ const GasMap = {
   },
 
   buildInfoContent(station) {
-    const savingText = station.maxSaving > 0
-      ? `<p class="map-info-saving">92# ${formatSavingPerLiter(station.diff92)} · 95# ${formatSavingPerLiter(station.diff95)}</p>`
-      : '<p class="map-info-saving muted">暂无优惠</p>';
+    const label92 = formatMapSavingLabel(station.diff92);
+    const label95 = formatMapSavingLabel(station.diff95);
+    const savingText = `<p class="map-info-saving">92${label92} · 95${label95}</p>`;
+    const updated = formatPriceUpdated(station.priceUpdatedAt);
+    const updateText = updated !== '--'
+      ? `<p class="map-info-updated">更新 ${updated}</p>`
+      : '';
     const routeMeta = station.routeDetourKm != null
-      ? `<p class="map-info-meta">距路线 ${station.routeDetourKm}km${station.routeRecommendRank ? ` · 顺路推荐第${station.routeRecommendRank}` : ''}</p>`
+      ? `<p class="map-info-meta">距路线 ${station.routeDetourKm}km${station.routeRecommendRank ? ` · 顺路第${station.routeRecommendRank}` : ''}</p>`
       : `<p class="map-info-meta">${formatDistance(station.distance)}</p>`;
 
     return `
@@ -336,6 +346,7 @@ const GasMap = {
         <h4>${station.name}</h4>
         ${routeMeta}
         ${savingText}
+        ${updateText}
         <button type="button" class="map-info-nav-btn" data-nav-station="${station.id}">导航到加油站</button>
       </div>
     `;

@@ -599,6 +599,17 @@ body {
   border: 1px solid #e2e8f0;
 }
 
+.map-marker-updated {
+  font-size: 8px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #f8fafc;
+  white-space: nowrap;
+}
+
 .map-marker-detail.is-best .map-marker-label .map-marker-fuel.save-pos {
   background: #ecfdf5;
   border-color: #059669;
@@ -695,6 +706,12 @@ body {
 .map-info-meta { font-size: 0.75rem; color: var(--color-text-secondary); }
 .map-info-prices { font-size: 0.8125rem; font-weight: 600; }
 .map-info-saving { font-size: 0.8125rem; color: var(--color-success); font-weight: 600; margin-top: 4px; }
+
+.map-info-updated {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
 
 .map-info-nav-btn {
   display: block;

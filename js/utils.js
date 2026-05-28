@@ -95,6 +95,16 @@ function formatMapSavingLabel(diff) {
 }
 
 /**
+ * 油价数据更新日期（简短）
+ */
+function formatPriceUpdated(dateStr) {
+  if (!dateStr) return '--';
+  const parts = String(dateStr).split('-');
+  if (parts.length >= 3) return `${parts[1]}-${parts[2]}`;
+  return dateStr;
+}
+
+/**
  * 今日最推荐：附近综合每升优惠最大
  */
 function getTodayBestStation(stations) {
@@ -141,6 +151,7 @@ function enrichStation(station, benchmark, fillVolume) {
     isCheaper95: station.price95 < benchmark.price95,
     diff92: calcSavingPerLiter(benchmark.price92, station.price92),
     diff95: calcSavingPerLiter(benchmark.price95, station.price95),
+    priceUpdatedAt: benchmark.updatedAt || '',
   };
 }
 
