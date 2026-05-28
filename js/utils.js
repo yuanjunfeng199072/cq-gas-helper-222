@@ -95,21 +95,22 @@ function formatMapSavingLabel(diff) {
 }
 
 /**
- * 油站活动细则（放大标签用）
+ * 油站活动时间（放大标签用）
  */
-function getStationActivityRule(station) {
+function getStationActivityTime(station) {
+  if (station.activityTime) return String(station.activityTime).trim();
   if (station.activityRule) return String(station.activityRule).trim();
   const bestDiff = Math.max(station.diff92 || 0, station.diff95 || 0);
   if (bestDiff <= 0) return '';
   const idNum = parseInt(String(station.id).replace(/\D/g, ''), 10) || 0;
-  const rules = [
-    '周一周三周五',
-    '周二周四会员日',
-    '夜间22:00-6:00',
-    '满200减20',
-    '持卡加油优惠',
+  const schedules = [
+    '每周一、三、五',
+    '每周二、四',
+    '每日22:00-6:00',
+    '周末全天',
+    '每月8/18/28日',
   ];
-  return rules[idNum % rules.length];
+  return schedules[idNum % schedules.length];
 }
 
 function escapeMapText(text) {
@@ -121,13 +122,13 @@ function escapeMapText(text) {
 }
 
 /**
- * 地图放大标签 · 活动细则小字 HTML
+ * 地图放大标签 · 活动时间小字 HTML
  */
 function buildMapActivityHtml(station, { compact = false } = {}) {
-  const rule = getStationActivityRule(station);
-  if (!rule) return '';
+  const time = getStationActivityTime(station);
+  if (!time) return '';
   const cls = compact ? 'map-marker-activity map-marker-activity-compact' : 'map-marker-activity';
-  return `<span class="${cls}">活动细则：${escapeMapText(rule)}</span>`;
+  return `<span class="${cls}">活动时间：${escapeMapText(time)}</span>`;
 }
 
 /**

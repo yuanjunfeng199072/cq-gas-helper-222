@@ -244,7 +244,7 @@ const GasMap = {
 
   markerDetailOffset(zoom, station) {
     if (zoom < this.markerZoomThreshold) return -14;
-    const hasActivity = !!getStationActivityRule(station);
+    const hasActivity = !!getStationActivityTime(station);
     if (zoom < 13) return hasActivity ? -40 : -32;
     return hasActivity ? -52 : -40;
   },
