@@ -34,6 +34,25 @@ const SheetsDataLoader = {
     return typeof SHEETS_CONFIG !== 'undefined' ? SHEETS_CONFIG : { enabled: false };
   },
 
+  /** 是否已填写有效表格 ID 或 publishUrl */
+  isConfigured(cfg = this.getConfig()) {
+    if (cfg.publishUrl && /^https?:\/\//.test(cfg.publishUrl) && !cfg.publishUrl.includes('xxxxx')) {
+      return true;
+    }
+    const id = cfg.spreadsheetId || '';
+    return Boolean(id) && !/YOUR_|PLACEHOLDER/i.test(id);
+  },
+
+  buildSpreadsheetUrl(cfg) {
+    if (cfg.spreadsheetUrl && /^https?:\/\//.test(cfg.spreadsheetUrl)) {
+      return cfg.spreadsheetUrl;
+    }
+    if (this.isConfigured(cfg) && cfg.spreadsheetId) {
+      return `https://docs.google.com/spreadsheets/d/${cfg.spreadsheetId}/edit`;
+    }
+    return '';
+  },
+
   normalizeHeader(cell) {
     return String(cell || '').trim().toLowerCase().replace(/\s+/g, '');
   },
@@ -189,6 +208,44 @@ const SheetsDataLoader = {
     return rows;
   },
 
+  async fetchViaPublishUrl(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`网页应用读取失败 ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE html>') && text.includes('sign in')) {
+      throw new Error('网页应用需设为「任何人」可访问');
+    }
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error('网页应用返回的不是 JSON，请检查 Apps Script 部署');
+    }
+    if (Array.isArray(json.values)) return json.values;
+    if (Array.isArray(json)) return json;
+    if (Array.isArray(json.stations)) {
+      return this.stationsArrayToRows(json.stations);
+    }
+    throw new Error('JSON 需包含 values 二维数组，或 stations 数组');
+  },
+
+  /** 将 {id,name,lat,...} 转为表头+行 */
+  stationsArrayToRows(stations) {
+    const header = ['id', 'name', 'lat', 'lng', '92号油价', '95号油价', 'discounts', 'lastUpdated', 'isFilled'];
+    const rows = [header];
+    stations.forEach((s) => {
+      rows.push([
+        s.id, s.name, s.lat, s.lng,
+        s.price92 ?? s['92号油价'] ?? '',
+        s.price95 ?? s['95号油价'] ?? '',
+        s.discounts ?? '',
+        s.lastUpdated ?? '',
+        s.isFilled ? '是' : '否',
+      ]);
+    });
+    return rows;
+  },
+
   async fetchViaApi(cfg) {
     const range = encodeURIComponent(cfg.range || 'Sheet1!A:Z');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}/values/${range}?key=${encodeURIComponent(cfg.apiKey)}`;
@@ -216,20 +273,23 @@ const SheetsDataLoader = {
   async load() {
     const cfg = this.getConfig();
     if (!cfg.enabled) throw new Error('SHEETS_CONFIG.enabled 未开启');
-    if (!cfg.spreadsheetId || cfg.spreadsheetId.includes('YOUR_')) {
-      throw new Error('请在 js/config.js 填写 SHEETS_CONFIG.spreadsheetId');
+    if (!this.isConfigured(cfg)) {
+      throw new Error('请先在 js/config.js 填写 spreadsheetId 或 publishUrl（勿使用 YOUR_ 占位链接）');
     }
 
     let rows;
-    if (cfg.apiKey) {
+    if (cfg.publishUrl) {
+      rows = await this.fetchViaPublishUrl(cfg.publishUrl);
+    } else if (cfg.apiKey) {
       rows = await this.fetchViaApi(cfg);
     } else {
       rows = await this.fetchViaCsv(cfg);
     }
 
+    const sheetUrl = this.buildSpreadsheetUrl(cfg);
     return this.rowsToAppData(rows, {
       dataUpdatedAt: cfg.dataUpdatedAt,
-      sheetUrl: cfg.spreadsheetUrl,
+      sheetUrl,
     });
   },
 };

@@ -31,13 +31,20 @@ const DOM = {
 
 async function loadData() {
   const sheetsCfg = typeof SHEETS_CONFIG !== 'undefined' ? SHEETS_CONFIG : { enabled: false };
+  let sheetsError = null;
 
   if (sheetsCfg.enabled && typeof SheetsDataLoader !== 'undefined') {
-    try {
-      appData = await SheetsDataLoader.load();
-      return;
-    } catch (err) {
-      console.error('Google Sheets 加载失败，尝试回退:', err);
+    if (!SheetsDataLoader.isConfigured(sheetsCfg)) {
+      sheetsError = 'Google 表格未配置：请在 js/config.js 填写 spreadsheetId 或 publishUrl';
+      console.warn(sheetsError);
+    } else {
+      try {
+        appData = await SheetsDataLoader.load();
+        return;
+      } catch (err) {
+        sheetsError = err.message || String(err);
+        console.error('Google Sheets 加载失败，尝试回退:', err);
+      }
     }
   }
 
@@ -47,9 +54,11 @@ async function loadData() {
     if (!res.ok) throw new Error('fetch failed');
     appData = await res.json();
     appData.dataSource = 'mock-json';
+    if (sheetsError) appData.sheetsLoadError = sheetsError;
   } catch {
     appData = window.MOCK_STATIONS_DATA || FALLBACK_DATA;
     appData.dataSource = 'fallback';
+    if (sheetsError) appData.sheetsLoadError = sheetsError;
   }
 }
 
@@ -115,12 +124,14 @@ function renderDataSyncBadge() {
   const label = parts.length >= 3 ? `数据 ${parts[1]}-${parts[2]}` : (updated ? `数据 ${updated}` : '数据同步中');
 
   el.textContent = label;
-  el.title = [
-    `数据来源：${appData.dataSource === 'google-sheets' ? 'Google 表格' : '本地'}`,
+  const lines = [
+    `数据来源：${appData.dataSource === 'google-sheets' ? 'Google 表格' : '本地备份'}`,
     updated ? `更新：${updated}` : '',
     appData.dataFetchedAt ? `加载：${new Date(appData.dataFetchedAt).toLocaleString()}` : '',
-    appData.sheetUrl ? `表格：${appData.sheetUrl}` : '',
-  ].filter(Boolean).join('\n');
+  ];
+  if (appData.sheetUrl) lines.push(`编辑表格：${appData.sheetUrl}`);
+  if (appData.sheetsLoadError) lines.push(`表格加载失败：${appData.sheetsLoadError}`);
+  el.title = lines.filter(Boolean).join('\n');
 
   if (appData.dataSource !== 'google-sheets') {
     el.classList.add('is-local');
@@ -622,6 +633,20 @@ async function init() {
     renderAll();
   }
   DOM.loading?.classList.add('hidden');
+
+  if (appData?.sheetsLoadError) {
+    setTimeout(() => {
+      alert(
+        'Google 表格未能加载，当前使用本地备份数据。\n\n'
+        + `原因：${appData.sheetsLoadError}\n\n`
+        + '请检查：\n'
+        + '1. config.js 中 spreadsheetId 是否为【你自己的】表格 ID（不是 YOUR_ 占位符）\n'
+        + '2. 表格是否已「知道链接的任何人可查看」\n'
+        + '3. 国内网络可尝试配置 publishUrl（Apps Script），见 docs/GOOGLE_SHEETS.md\n'
+        + '4. 或暂时设 SHEETS_CONFIG.enabled = false'
+      );
+    }, 400);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

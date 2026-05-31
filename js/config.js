@@ -34,20 +34,24 @@ const APP_CONFIG = {
 const SHEETS_CONFIG = {
   enabled: false,
 
-  /** 表格 ID：从 URL 中获取
-   * https://docs.google.com/spreadsheets/d【这一段就是 ID】/edit */
-  spreadsheetId: 'YOUR_SPREADSHEET_ID',
+  /**
+   * 表格 ID（必填，不能用 YOUR_ 占位符）
+   * 从浏览器地址栏复制：.../d/【这里】/edit
+   */
+  spreadsheetId: '',
 
-  /** 表格完整链接（仅用于展示，可选） */
-  spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit',
+  /** 仅填写真实表格链接；留空则顶栏不显示可点击链接 */
+  spreadsheetUrl: '',
 
-  /** 工作表 gid（标签页），默认 0；CSV 导出时使用 */
+  /**
+   * 【推荐·国内更易访问】Google Apps Script 部署的「网页应用」JSON 地址
+   * 见 docs/GOOGLE_SHEETS.md 第 5 节，填好后优先于 CSV/API
+   * 示例：https://script.google.com/macros/s/xxxxx/exec
+   */
+  publishUrl: '',
+
   gid: '0',
-
-  /** API 读取范围（仅 API 模式），默认第一个工作表 A:Z */
   range: 'Sheet1!A:Z',
-
-  /** Google Cloud 控制台申请的 API Key（可选，留空则用 CSV） */
   apiKey: '',
 
   /** 区域基准价（也可在表格 meta 行扩展，当前用配置） */
