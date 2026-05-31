@@ -10,7 +10,7 @@ echo.
 echo 请用浏览器打开（不要双击 index.html）:
 echo   %URL%
 echo.
-echo 右下角应显示版本号 v2025052611
+echo 右下角应显示版本号 v2025052613
 echo 地图放大后标签内可见「活动时间：每周一、三、五」
 echo.
 

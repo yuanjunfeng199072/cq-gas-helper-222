@@ -346,20 +346,37 @@ const GasMap = {
       ? `<p class="map-info-meta">距路线 ${station.routeDetourKm}km${station.routeRecommendRank ? ` · 顺路第${station.routeRecommendRank}` : ''}</p>`
       : `<p class="map-info-meta">${formatDistance(station.distance)}</p>`;
 
+    const activityTime = typeof getStationActivityTime === 'function'
+      ? getStationActivityTime(station)
+      : '';
+    const activityText = activityTime
+      ? `<p class="map-info-activity">活动时间：${escapeMapText(activityTime)}</p>`
+      : '';
+
     return `
       <div class="map-info">
         <h4>${station.name}</h4>
         ${routeMeta}
         ${savingText}
         ${updateText}
+        ${activityText}
+        <button type="button" class="map-info-intel-btn" data-intel-station="${station.id}">更新优惠情报</button>
         <button type="button" class="map-info-nav-btn" data-nav-station="${station.id}">导航到加油站</button>
       </div>
     `;
   },
 
-  bindInfoNavButton(station) {
-    const btn = document.querySelector(`[data-nav-station="${station.id}"]`);
-    btn?.addEventListener('click', () => this.openNavigation(station));
+  bindInfoButtons(station) {
+    const navBtn = document.querySelector(`[data-nav-station="${station.id}"]`);
+    navBtn?.addEventListener('click', () => this.openNavigation(station));
+
+    const intelBtn = document.querySelector(`[data-intel-station="${station.id}"]`);
+    intelBtn?.addEventListener('click', () => {
+      this.infoWindow?.close();
+      if (typeof GasCommunity !== 'undefined' && GasCommunity.openSheetForStation) {
+        GasCommunity.openSheetForStation(station);
+      }
+    });
   },
 
   showStationOnRoute(stationId, stations) {
@@ -369,7 +386,7 @@ const GasMap = {
 
     this.infoWindow.setContent(this.buildInfoContent(station));
     this.infoWindow.open(this.map, marker.getPosition());
-    this.bindInfoNavButton(station);
+    this.bindInfoButtons(station);
   },
 
   focusStation(stationId, stations) {
@@ -381,7 +398,7 @@ const GasMap = {
     this.map.setZoom(15);
     this.infoWindow.setContent(this.buildInfoContent(station));
     this.infoWindow.open(this.map, marker.getPosition());
-    this.bindInfoNavButton(station);
+    this.bindInfoButtons(station);
   },
 
   highlightListCard(stationId) {

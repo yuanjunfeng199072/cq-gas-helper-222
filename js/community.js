@@ -184,6 +184,40 @@ const GasCommunity = {
     this.dom.backdrop?.classList.add('hidden');
   },
 
+  /** 从站点详情打开共建表单并预填 */
+  openSheetForStation(station) {
+    if (!station) return;
+    if (typeof closeRankSheet === 'function' && typeof sheetOpen !== 'undefined' && sheetOpen) {
+      closeRankSheet();
+    }
+    this.openSheet();
+
+    if (this.dom.stationInput) {
+      this.dom.stationInput.value = station.name || '';
+    }
+    if (this.dom.save92 && station.diff92 > 0) {
+      this.dom.save92.value = this.normalizeSaving(station.diff92);
+    }
+    if (this.dom.save95 && station.diff95 > 0) {
+      this.dom.save95.value = this.normalizeSaving(station.diff95);
+    }
+    const activityTime = typeof getStationActivityTime === 'function'
+      ? getStationActivityTime(station)
+      : '';
+    if (this.dom.note && activityTime && !this.dom.note.value) {
+      this.dom.note.value = `活动时间：${activityTime}`;
+    }
+    if (this.dom.updatedAt && !this.dom.updatedAt.value) {
+      this.dom.updatedAt.value = new Date().toISOString().slice(0, 10);
+    }
+
+    requestAnimationFrame(() => {
+      const formSection = document.querySelector('#intel-form');
+      formSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      this.dom.note?.focus();
+    });
+  },
+
   bindEvents() {
     this.dom.openBtn?.addEventListener('click', () => {
       if (typeof closeRankSheet === 'function' && sheetOpen) closeRankSheet();
