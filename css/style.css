@@ -757,12 +757,6 @@ body {
   margin-top: 2px;
 }
 
-.map-info-updated {
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-  margin-top: 2px;
-}
-
 .map-info-activity {
   font-size: 0.6875rem;
   color: var(--color-text-secondary);
