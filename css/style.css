@@ -85,6 +85,24 @@ body {
   font-weight: 600;
 }
 
+.data-updated-badge {
+  font-size: 0.625rem;
+  padding: 3px 8px;
+  background: #ecfdf5;
+  color: #047857;
+  border-radius: 10px;
+  font-weight: 600;
+  max-width: 42%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-updated-badge.is-local {
+  background: #f8fafc;
+  color: var(--color-text-muted);
+}
+
 .dest-bar-wrap {
   position: relative;
   margin-bottom: 4px;

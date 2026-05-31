@@ -5,7 +5,7 @@
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 总览、目录结构、模块职责 |
 | [DATABASE.md](./DATABASE.md) | 9 张表/集合、字段、状态机 |
 | [API.md](./API.md) | REST + 云函数接口契约 |
-| [ROADMAP.md](./ROADMAP.md) | 6 阶段渐进迁移计划 |
+| [GOOGLE_SHEETS.md](./GOOGLE_SHEETS.md) | Google 表格数据源配置 |
 
 ## 快速开始（阶段 1）
 

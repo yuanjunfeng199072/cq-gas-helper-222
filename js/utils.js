@@ -99,7 +99,9 @@ function formatMapSavingLabel(diff) {
  */
 function getStationActivityTime(station) {
   if (station.activityTime) return String(station.activityTime).trim();
+  if (station.discounts) return String(station.discounts).trim();
   if (station.activityRule) return String(station.activityRule).trim();
+  if (typeof isStationFilled === 'function' && !isStationFilled(station)) return '';
   const bestDiff = Math.max(station.diff92 || 0, station.diff95 || 0);
   if (bestDiff <= 0) return '';
   const idNum = parseInt(String(station.id).replace(/\D/g, ''), 10) || 0;

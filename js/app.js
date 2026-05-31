@@ -30,13 +30,26 @@ const DOM = {
 };
 
 async function loadData() {
+  const sheetsCfg = typeof SHEETS_CONFIG !== 'undefined' ? SHEETS_CONFIG : { enabled: false };
+
+  if (sheetsCfg.enabled && typeof SheetsDataLoader !== 'undefined') {
+    try {
+      appData = await SheetsDataLoader.load();
+      return;
+    } catch (err) {
+      console.error('Google Sheets 加载失败，尝试回退:', err);
+    }
+  }
+
   const cacheBust = window.APP_BUILD || Date.now();
   try {
     const res = await fetch(`./data/mock-stations.json?v=${cacheBust}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('fetch failed');
     appData = await res.json();
+    appData.dataSource = 'mock-json';
   } catch {
     appData = window.MOCK_STATIONS_DATA || FALLBACK_DATA;
+    appData.dataSource = 'fallback';
   }
 }
 
@@ -91,6 +104,29 @@ function recalculateDistances() {
 function updateLocationBadge(isReal) {
   if (!DOM.locationBadge) return;
   DOM.locationBadge.textContent = isReal === null ? '定位中' : isReal ? '实时' : '模拟';
+}
+
+function renderDataSyncBadge() {
+  const el = document.getElementById('data-updated-badge');
+  if (!el || !appData) return;
+
+  const updated = appData.dataUpdatedAt || appData.benchmark?.updatedAt || '';
+  const parts = String(updated).split('-');
+  const label = parts.length >= 3 ? `数据 ${parts[1]}-${parts[2]}` : (updated ? `数据 ${updated}` : '数据同步中');
+
+  el.textContent = label;
+  el.title = [
+    `数据来源：${appData.dataSource === 'google-sheets' ? 'Google 表格' : '本地'}`,
+    updated ? `更新：${updated}` : '',
+    appData.dataFetchedAt ? `加载：${new Date(appData.dataFetchedAt).toLocaleString()}` : '',
+    appData.sheetUrl ? `表格：${appData.sheetUrl}` : '',
+  ].filter(Boolean).join('\n');
+
+  if (appData.dataSource !== 'google-sheets') {
+    el.classList.add('is-local');
+  } else {
+    el.classList.remove('is-local');
+  }
 }
 
 function renderLocation() {
@@ -243,6 +279,7 @@ function renderMapMarkers() {
 }
 
 function renderAll() {
+  renderDataSyncBadge();
   renderRankList();
   renderStationList();
   renderRouteChip();
