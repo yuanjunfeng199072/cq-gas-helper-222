@@ -387,8 +387,28 @@ body {
 
 .map-marker-pending,
 .map-marker-station.map-marker-pending {
-  border-color: #94a3b8;
-  background: #f1f5f9;
+  border-color: #94a3b8 !important;
+  background: #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(148, 163, 184, 0.35) !important;
+}
+
+/* 未更新站点：油桶图标灰显（小图标与展开标签底部圆点） */
+.map-marker-icon.map-marker-pending,
+.map-marker-dot.map-marker-pending {
+  filter: grayscale(1);
+  opacity: 0.82;
+  color: #64748b;
+}
+
+.map-marker-icon.map-marker-pending:not(.route-best):not(.on-route),
+.map-marker-dot.map-marker-pending:not(.route-best):not(.on-route) {
+  border-color: #94a3b8 !important;
+  background: #e2e8f0 !important;
+}
+
+.map-marker-pending-wrap .map-marker-dot {
+  filter: grayscale(1);
+  opacity: 0.82;
 }
 
 .map-marker-pending-tag {
@@ -869,6 +889,17 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-sm, 0 1px 4px rgba(0,0,0,0.1));
+}
+
+.map-marker-emoji {
+  display: inline-block;
+  line-height: 1;
+}
+
+.map-marker-pending .map-marker-emoji,
+.map-marker-pending-wrap .map-marker-emoji {
+  filter: grayscale(1);
+  opacity: 0.75;
 }
 
 .map-marker-dest {

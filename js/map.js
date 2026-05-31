@@ -202,7 +202,7 @@ const GasMap = {
     if (!showDetail) {
       return `
         <div class="map-marker ${cls} map-marker-icon ${routeRank ? 'has-rank' : ''}">
-          ${routeRank ? `<span class="map-marker-rank">${routeRank}</span>` : icon}
+          ${routeRank ? `<span class="map-marker-rank">${routeRank}</span>` : `<span class="map-marker-emoji">${icon}</span>`}
         </div>
       `;
     }
@@ -216,7 +216,7 @@ const GasMap = {
             <span class="map-marker-pending-tag">数据建设中</span>
             <span class="map-marker-updated">待更新</span>
           </div>
-          <div class="map-marker-dot ${cls}">${routeRank || '⛽'}</div>
+          <div class="map-marker-dot ${cls}"><span class="map-marker-emoji">${routeRank || '⛽'}</span></div>
         </div>
       `;
     }
@@ -241,7 +241,7 @@ const GasMap = {
           ${updatedHtml}
           ${activityHtml}
         </div>
-        <div class="map-marker-dot ${cls}">${routeRank || (isRouteBest ? '🏆' : '⛽')}</div>
+        <div class="map-marker-dot ${cls}">${routeRank ? `<span class="map-marker-rank">${routeRank}</span>` : `<span class="map-marker-emoji">${isRouteBest ? '🏆' : '⛽'}</span>`}</div>
       </div>
     `;
   },
