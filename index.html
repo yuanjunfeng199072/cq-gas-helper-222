@@ -9,7 +9,7 @@
   <meta name="description" content="重庆加油优惠情报站 - 快速找到附近最优惠加油站">
   <meta name="theme-color" content="#1d4ed8">
   <title>重庆加油优惠情报站</title>
-  <script>window.APP_BUILD = '2025052613';</script>
+  <script>window.APP_BUILD = '2025052614';</script>
   <style id="critical-layout">
     .app { max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
     .map-wrap { flex: 1; min-height: 0; position: relative; }
@@ -18,7 +18,12 @@
       transform: translateX(-50%) translateY(100%); z-index: 50;
       pointer-events: none; visibility: hidden;
     }
-    .intel-sheet.open, .rank-sheet.open {
+    .submit-sheet {
+      position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 480px;
+      transform: translateX(-50%) translateY(100%); z-index: 50;
+      pointer-events: none; visibility: hidden;
+    }
+    .intel-sheet.open, .rank-sheet.open, .submit-sheet.open {
       transform: translateX(-50%) translateY(0); pointer-events: auto; visibility: visible;
     }
     .sheet-backdrop { position: fixed; inset: 0; z-index: 40; }
@@ -49,7 +54,7 @@
     } catch (err) { /* ignore */ }
   })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=2025052613">
+  <link rel="stylesheet" href="css/style.css?v=2025052614">
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="https://webapi.amap.com">
 </head>
@@ -73,6 +78,7 @@
       </div>
       <div class="loc-row">
         <p class="loc-text" id="location-name">定位中...</p>
+        <button type="button" id="submit-data-btn" class="loc-btn loc-btn-accent">提交优惠</button>
         <button type="button" id="locate-btn" class="loc-btn">定位</button>
       </div>
     </header>
@@ -172,6 +178,45 @@
     </div>
     <div id="intel-backdrop" class="sheet-backdrop hidden"></div>
 
+    <!-- 临时提交油价/优惠（可对接问卷链接） -->
+    <div id="submit-sheet" class="submit-sheet" aria-hidden="true">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2 class="sheet-title">提交油价 / 优惠信息</h2>
+        <button type="button" class="sheet-close" id="submit-sheet-close" aria-label="关闭">×</button>
+      </div>
+      <div class="submit-sheet-body">
+        <p class="submit-sheet-hint">感谢补充情报！带 <span class="hint-pending">待更新</span> 的站点急需真实数据。</p>
+        <form id="submit-data-form" class="submit-data-form">
+          <label class="intel-field">
+            <span>加油站名称</span>
+            <input type="text" id="submit-station" required maxlength="40" placeholder="如：中石化礼嘉站" list="intel-station-list">
+          </label>
+          <div class="intel-field-row">
+            <label class="intel-field">
+              <span>92# 油价（元/升）</span>
+              <input type="text" id="submit-price92" inputmode="decimal" placeholder="7.68" maxlength="8">
+            </label>
+            <label class="intel-field">
+              <span>95# 油价（元/升）</span>
+              <input type="text" id="submit-price95" inputmode="decimal" placeholder="8.18" maxlength="8">
+            </label>
+          </div>
+          <label class="intel-field">
+            <span>优惠活动</span>
+            <input type="text" id="submit-promo" maxlength="120" placeholder="如：每周一三五满减、夜间优惠">
+          </label>
+          <label class="intel-field">
+            <span>提交时间</span>
+            <input type="datetime-local" id="submit-time">
+          </label>
+          <button type="submit" class="intel-submit-btn">提交</button>
+        </form>
+        <p class="submit-sheet-note">也可使用 <a href="#" id="submit-external-link" target="_blank" rel="noopener">在线问卷</a> 提交（管理员可在 config.js 配置链接）</p>
+      </div>
+    </div>
+    <div id="submit-backdrop" class="sheet-backdrop hidden"></div>
+
     <!-- 排行榜抽屉 -->
     <div id="rank-sheet" class="rank-sheet" aria-hidden="true">
       <div class="sheet-handle" id="sheet-handle"></div>
@@ -194,12 +239,12 @@
     <p>正在加载优惠情报...</p>
   </div>
 
-  <script src="data/stations-data.js?v=2025052613"></script>
-  <script src="js/config.js?v=2025052613"></script>
-  <script src="js/utils.js?v=2025052613"></script>
-  <script src="js/map.js?v=2025052613"></script>
-  <script src="js/route.js?v=2025052613"></script>
-  <script src="js/community.js?v=2025052613"></script>
-  <script src="js/app.js?v=2025052613"></script>
+  <script src="data/stations-data.js?v=2025052614"></script>
+  <script src="js/config.js?v=2025052614"></script>
+  <script src="js/utils.js?v=2025052614"></script>
+  <script src="js/map.js?v=2025052614"></script>
+  <script src="js/route.js?v=2025052614"></script>
+  <script src="js/community.js?v=2025052614"></script>
+  <script src="js/app.js?v=2025052614"></script>
 </body>
 </html>

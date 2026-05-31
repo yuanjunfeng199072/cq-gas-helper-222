@@ -15,3 +15,9 @@ const AMAP_CONFIG = {
   markerZoomThreshold: 11,
   fitViewRadiusKm: 12,
 };
+
+/** 应用配置（提交表单等） */
+const APP_CONFIG = {
+  /** 外部问卷链接，留空则仅使用站内临时表单 */
+  submitFormUrl: '',
+};

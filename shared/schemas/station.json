@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StationPublic",
+  "type": "object",
+  "required": ["id", "name", "lat", "lng"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "brand": { "type": "string" },
+    "address": { "type": "string" },
+    "district": { "type": "string" },
+    "lat": { "type": "number" },
+    "lng": { "type": "number" },
+    "distance": { "type": "number" },
+    "save_92": { "type": "number", "minimum": 0 },
+    "save_95": { "type": "number", "minimum": 0 },
+    "activity_schedule": { "type": "string" },
+    "activity_note": { "type": "string" },
+    "data_updated_at": { "type": "string" },
+    "open_hours": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "isFilled": { "type": "boolean" },
+    "lastUpdated": { "type": "string" }
+  }
+}

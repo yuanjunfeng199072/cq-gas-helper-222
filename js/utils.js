@@ -161,9 +161,28 @@ function getTodayBestStation(stations) {
  */
 function rankStationsByFuel(stations, fuel) {
   const key = fuel === '95' ? 'diff95' : 'diff92';
-  return [...stations]
-    .filter((s) => s[key] > 0)
+  const filled = stations.filter((s) => isStationFilled(s) && s[key] > 0);
+  return [...filled]
     .sort((a, b) => b[key] - a[key] || a.distance - b.distance);
+}
+
+/**
+ * 站点是否已录入真实数据
+ */
+function isStationFilled(station) {
+  return station && station.isFilled === true;
+}
+
+/**
+ * 卡片/列表上的更新状态文案
+ */
+function formatStationStatusLabel(station) {
+  if (!isStationFilled(station)) return '待更新';
+  const raw = station.lastUpdated || station.priceUpdatedAt || '';
+  if (!raw) return '已录入';
+  const parts = String(raw).split('-');
+  if (parts.length >= 3) return `更${parts[1]}-${parts[2]}`;
+  return `更${raw}`;
 }
 
 /**
@@ -174,20 +193,25 @@ function rankStationsByFuel(stations, fuel) {
  * @returns {object}
  */
 function enrichStation(station, benchmark, fillVolume) {
-  const saving92 = calcTotalSaving(benchmark.price92, station.price92, fillVolume);
-  const saving95 = calcTotalSaving(benchmark.price95, station.price95, fillVolume);
+  const filled = isStationFilled(station);
+  const saving92 = filled ? calcTotalSaving(benchmark.price92, station.price92, fillVolume) : 0;
+  const saving95 = filled ? calcTotalSaving(benchmark.price95, station.price95, fillVolume) : 0;
   const maxSaving = Math.max(saving92, saving95);
+  const diff92 = filled ? calcSavingPerLiter(benchmark.price92, station.price92) : 0;
+  const diff95 = filled ? calcSavingPerLiter(benchmark.price95, station.price95) : 0;
 
   return {
     ...station,
+    isFilled: filled,
+    lastUpdated: station.lastUpdated || '',
     saving92,
     saving95,
     maxSaving,
-    isCheaper92: station.price92 < benchmark.price92,
-    isCheaper95: station.price95 < benchmark.price95,
-    diff92: calcSavingPerLiter(benchmark.price92, station.price92),
-    diff95: calcSavingPerLiter(benchmark.price95, station.price95),
-    priceUpdatedAt: benchmark.updatedAt || '',
+    isCheaper92: filled && station.price92 < benchmark.price92,
+    isCheaper95: filled && station.price95 < benchmark.price95,
+    diff92,
+    diff95,
+    priceUpdatedAt: filled ? (station.lastUpdated || benchmark.updatedAt || '') : '',
   };
 }
 

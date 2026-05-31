@@ -190,7 +190,9 @@ const GasMap = {
 
   buildMarkerContent(station, zoom, { isRouteBest = false, isOnRoute = false, routeRank = 0 } = {}) {
     const showDetail = zoom >= this.markerZoomThreshold;
+    const filled = typeof isStationFilled === 'function' ? isStationFilled(station) : true;
     let cls = 'map-marker-station';
+    if (!filled) cls += ' map-marker-pending';
     if (isRouteBest) cls += ' route-best';
     else if (isOnRoute) cls += ' on-route';
 
@@ -201,6 +203,20 @@ const GasMap = {
       return `
         <div class="map-marker ${cls} map-marker-icon ${routeRank ? 'has-rank' : ''}">
           ${routeRank ? `<span class="map-marker-rank">${routeRank}</span>` : icon}
+        </div>
+      `;
+    }
+
+    if (!filled) {
+      const labelSizeClass = zoom < 13 ? 'map-marker-label-sm' : '';
+      return `
+        <div class="map-marker map-marker-detail map-marker-pending-wrap ${routeRank ? 'has-rank' : ''}">
+          ${routeRank ? `<span class="map-marker-rank map-marker-rank-lg">${routeRank}</span>` : ''}
+          <div class="map-marker-label ${labelSizeClass}">
+            <span class="map-marker-pending-tag">数据建设中</span>
+            <span class="map-marker-updated">待更新</span>
+          </div>
+          <div class="map-marker-dot ${cls}">${routeRank || '⛽'}</div>
         </div>
       `;
     }
@@ -335,18 +351,23 @@ const GasMap = {
   },
 
   buildInfoContent(station) {
-    const label92 = formatMapSavingLabel(station.diff92);
-    const label95 = formatMapSavingLabel(station.diff95);
-    const savingText = `<p class="map-info-saving">92${label92} · 95${label95}</p>`;
-    const updated = formatPriceUpdated(station.priceUpdatedAt);
-    const updateText = updated !== '--'
-      ? `<p class="map-info-updated">更新 ${updated}</p>`
-      : '';
+    const filled = typeof isStationFilled === 'function' ? isStationFilled(station) : true;
+    const statusLabel = typeof formatStationStatusLabel === 'function'
+      ? formatStationStatusLabel(station)
+      : '待更新';
+    const savingText = filled
+      ? `<p class="map-info-saving">92${formatMapSavingLabel(station.diff92)} · 95${formatMapSavingLabel(station.diff95)}</p>`
+      : `<p class="map-info-pending">数据建设中 · 暂无优惠数据</p>`;
+    const updateText = filled
+      ? (formatPriceUpdated(station.priceUpdatedAt) !== '--'
+        ? `<p class="map-info-updated">更新 ${formatPriceUpdated(station.priceUpdatedAt)}</p>`
+        : '')
+      : `<p class="map-info-updated">${statusLabel}</p>`;
     const routeMeta = station.routeDetourKm != null
       ? `<p class="map-info-meta">距路线 ${station.routeDetourKm}km${station.routeRecommendRank ? ` · 顺路第${station.routeRecommendRank}` : ''}</p>`
       : `<p class="map-info-meta">${formatDistance(station.distance)}</p>`;
 
-    const activityTime = typeof getStationActivityTime === 'function'
+    const activityTime = filled && typeof getStationActivityTime === 'function'
       ? getStationActivityTime(station)
       : '';
     const activityText = activityTime

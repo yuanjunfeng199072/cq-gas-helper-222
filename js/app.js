@@ -53,6 +53,12 @@ const FALLBACK_DATA = {
   ],
 };
 
+FALLBACK_DATA.stations = FALLBACK_DATA.stations.map((s, i) => ({
+  ...s,
+  isFilled: i < 5,
+  lastUpdated: i < 5 ? '2025-05-25' : '',
+}));
+
 function enrichAllStations() {
   const { benchmark, fillVolume, stations } = appData;
   enrichedStations = stations.map((s) => enrichStation(s, benchmark, fillVolume));
@@ -139,38 +145,69 @@ async function requestRealLocation({ alertOnFail = false } = {}) {
 
 function renderRankList() {
   const ranked = rankStationsByFuel(enrichedStations, rankFuelTab);
-  if (!ranked.length) {
-    DOM.rankList.innerHTML = `<li class="rank-empty">附近暂无${rankFuelTab}#优惠站点</li>`;
-    return;
+  const pending = enrichedStations.filter((s) => !isStationFilled(s))
+    .sort((a, b) => a.distance - b.distance);
+
+  let html = '';
+  if (ranked.length) {
+    html += ranked.map((s, i) => `
+      <li class="rank-item" data-id="${s.id}">
+        <span class="rank-no">${i + 1}</span>
+        <span class="rank-name">${s.name}</span>
+        <span class="rank-save">${formatSavingPerLiter(rankFuelTab === '95' ? s.diff95 : s.diff92)}</span>
+        <span class="rank-dist">${formatDistance(s.distance)} · ${formatStationStatusLabel(s)}</span>
+      </li>
+    `).join('');
+  } else {
+    html += `<li class="rank-empty">附近暂无已录入${rankFuelTab}#优惠站点</li>`;
   }
-  DOM.rankList.innerHTML = ranked.map((s, i) => `
-    <li class="rank-item" data-id="${s.id}">
-      <span class="rank-no">${i + 1}</span>
-      <span class="rank-name">${s.name}</span>
-      <span class="rank-save">${formatSavingPerLiter(rankFuelTab === '95' ? s.diff95 : s.diff92)}</span>
-      <span class="rank-dist">${formatDistance(s.distance)}</span>
-    </li>
-  `).join('');
+
+  if (pending.length) {
+    html += `<li class="rank-section-label">数据建设中</li>`;
+    html += pending.slice(0, 15).map((s) => `
+      <li class="rank-item is-pending" data-id="${s.id}">
+        <span class="rank-no">—</span>
+        <span class="rank-name">${s.name}</span>
+        <span class="rank-save">待更新</span>
+        <span class="rank-dist">${formatDistance(s.distance)}</span>
+      </li>
+    `).join('');
+    if (pending.length > 15) {
+      html += `<li class="rank-empty">另有 ${pending.length - 15} 站待录入</li>`;
+    }
+  }
+
+  DOM.rankList.innerHTML = html;
 }
 
 function renderStationCard(station) {
+  const filled = isStationFilled(station);
+  const statusLabel = formatStationStatusLabel(station);
+  const pendingClass = filled ? '' : ' is-pending';
+  const savingsHtml = filled
+    ? `<div class="card-savings">
+        <span class="card-save">92# ${formatSavingPerLiter(station.diff92)}</span>
+        <span class="card-save">95# ${formatSavingPerLiter(station.diff95)}</span>
+      </div>`
+    : `<p class="card-pending-msg">数据建设中 · 欢迎提交最新优惠</p>`;
+
   return `
-    <article class="station-card" data-id="${station.id}">
+    <article class="station-card${pendingClass}" data-id="${station.id}" data-filled="${filled}">
       <div class="card-row">
         <h3 class="card-name">${station.name}</h3>
         <span class="card-dist">${formatDistance(station.distance)}</span>
       </div>
-      <div class="card-savings">
-        <span class="card-save">92# ${formatSavingPerLiter(station.diff92)}</span>
-        <span class="card-save">95# ${formatSavingPerLiter(station.diff95)}</span>
-      </div>
+      ${savingsHtml}
+      <p class="card-status">${statusLabel}</p>
     </article>
   `;
 }
 
 function renderStationList() {
-  const list = [...enrichedStations]
-    .sort((a, b) => Math.max(b.diff92, b.diff95) - Math.max(a.diff92, a.diff95) || a.distance - b.distance);
+  const list = [...enrichedStations].sort((a, b) => {
+    if (isStationFilled(a) !== isStationFilled(b)) return isStationFilled(b) - isStationFilled(a);
+    return Math.max(b.diff92, b.diff95) - Math.max(a.diff92, a.diff95) || a.distance - b.distance;
+  });
   DOM.stationList.innerHTML = list.map((s) => renderStationCard(s)).join('');
 }
 
@@ -424,6 +461,103 @@ async function searchOnRouteBest() {
   }
 }
 
+function bindSubmitForm() {
+  const sheet = document.getElementById('submit-sheet');
+  const backdrop = document.getElementById('submit-backdrop');
+  const openBtn = document.getElementById('submit-data-btn');
+  const closeBtn = document.getElementById('submit-sheet-close');
+  const form = document.getElementById('submit-data-form');
+  const timeInput = document.getElementById('submit-time');
+  const externalLink = document.getElementById('submit-external-link');
+  const formUrl = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.submitFormUrl : '';
+
+  if (externalLink) {
+    if (formUrl) {
+      externalLink.href = formUrl;
+      externalLink.textContent = '在线问卷';
+    } else {
+      externalLink.href = '#';
+      externalLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('管理员可在 js/config.js 的 APP_CONFIG.submitFormUrl 配置 Google 表单链接');
+      });
+    }
+  }
+
+  const openSheet = () => {
+    if (GasCommunity?.sheetOpen) GasCommunity.closeSheet();
+    if (sheetOpen) closeRankSheet();
+    sheet?.classList.add('open');
+    sheet?.setAttribute('aria-hidden', 'false');
+    backdrop?.classList.remove('hidden');
+    if (timeInput && !timeInput.value) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      timeInput.value = now.toISOString().slice(0, 16);
+    }
+  };
+
+  const closeSheet = () => {
+    sheet?.classList.remove('open');
+    sheet?.setAttribute('aria-hidden', 'true');
+    backdrop?.classList.add('hidden');
+  };
+
+  openBtn?.addEventListener('click', openSheet);
+  closeBtn?.addEventListener('click', closeSheet);
+  backdrop?.addEventListener('click', closeSheet);
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const payload = {
+      station: document.getElementById('submit-station')?.value.trim(),
+      price92: document.getElementById('submit-price92')?.value.trim(),
+      price95: document.getElementById('submit-price95')?.value.trim(),
+      promo: document.getElementById('submit-promo')?.value.trim(),
+      time: document.getElementById('submit-time')?.value || new Date().toISOString(),
+    };
+    if (!payload.station) {
+      alert('请填写加油站名称');
+      return;
+    }
+    const summary = [
+      `加油站：${payload.station}`,
+      payload.price92 ? `92#：${payload.price92} 元/升` : '',
+      payload.price95 ? `95#：${payload.price95} 元/升` : '',
+      payload.promo ? `优惠：${payload.promo}` : '',
+      `时间：${payload.time}`,
+    ].filter(Boolean).join('\n');
+
+    if (formUrl) {
+      try {
+        navigator.clipboard?.writeText(summary);
+      } catch { /* ignore */ }
+      window.open(formUrl, '_blank', 'noopener');
+      alert('已复制提交摘要，请在新窗口问卷中粘贴补充');
+    } else if (typeof GasCommunity !== 'undefined' && GasCommunity.openSheetForStation) {
+      closeSheet();
+      GasCommunity.openSheetForStation({
+        name: payload.station,
+        diff92: 0,
+        diff95: 0,
+        isFilled: false,
+      });
+      const note = document.getElementById('intel-note');
+      const parts = [];
+      if (payload.price92) parts.push(`92# ${payload.price92}`);
+      if (payload.price95) parts.push(`95# ${payload.price95}`);
+      if (payload.promo) parts.push(payload.promo);
+      if (note && parts.length) note.value = parts.join(' · ');
+      alert('已转入「情报共建」表单，请确认后发布');
+      return;
+    } else {
+      alert(`感谢提交！\n\n${summary}\n\n（演示环境暂未接入后台）`);
+    }
+    form.reset();
+    closeSheet();
+  });
+}
+
 function bindEvents() {
   DOM.locateBtn?.addEventListener('click', () => requestRealLocation({ alertOnFail: true }));
   document.getElementById('fit-liangjiang-btn')?.addEventListener('click', () => {
@@ -433,6 +567,7 @@ function bindEvents() {
   bindDestAutocomplete();
   bindRankSheet();
   bindCommunity();
+  bindSubmitForm();
 }
 
 async function init() {
